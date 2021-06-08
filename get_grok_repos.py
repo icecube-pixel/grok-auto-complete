@@ -4,9 +4,7 @@ from typing import Dict, Tuple, List
 import os
 import argparse
 import traceback
-from datetime import datetime
-import time
-import pandas as pd
+
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S',
@@ -38,7 +36,7 @@ def get_matching_code(args: Dict)->None:
         pattern_file_extension = '"grok" in:file extension:j2'
         lang_to_exclude = get_query_string_to_exclude()
         _query_str = f"{pattern_file_extension}{lang_to_exclude}"
-        logger.info(_query_str)
+        logger.info(f"Processing query {_query_str}")
 
         results = g_obj.search_code(_query_str)
         for repo in results:
@@ -47,7 +45,7 @@ def get_matching_code(args: Dict)->None:
             logger.info("Dumping file {}".format(file_name))
             with open(path_to_dump, "wb") as f:
                 f.write(repo.decoded_content)
-            exit()
+
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
