@@ -4,6 +4,9 @@ from typing import Dict, Tuple, List
 import os
 import argparse
 import traceback
+from datetime import datetime
+import time
+import pandas as pd
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S',
@@ -21,10 +24,10 @@ def get_query_string_to_exclude()->str:
     logger.info("Inside function to generate query to hit API")
     languages_to_exclude = ['Jinja', 'Shell', 'YAML', 'INI', 'Perl', 'Haskell']
     exclude_languages = " ".join(["NOT language:{}".format(language)  for language in languages_to_exclude])
-    return " " + exclude_languages + " "
+    return " " + exclude_languages
 
 
-def get_top_repositories(args: Dict)->None:
+def get_matching_code(args: Dict)->None:
     """
     Gets the top matches of code based on pattern where grok is used and is of not YAML etc
     """
@@ -32,7 +35,11 @@ def get_top_repositories(args: Dict)->None:
 
     try:
         g_obj = Github(args['token'])
-        _query_str = '"grok" in:file extension:j2 NOT language:Jinja NOT language:Shell NOT language:YAML NOT language:INI NOT language:Perl NOT language:Haskell'
+        pattern_file_extension = '"grok" in:file extension:j2'
+        lang_to_exclude = get_query_string_to_exclude()
+        _query_str = f"{pattern_file_extension}{lang_to_exclude}"
+        logger.info(_query_str)
+
         results = g_obj.search_code(_query_str)
         for repo in results:
             file_name = str(repo).split("ContentFile(path=")[1].replace('"',"")[:-1].replace("/", "_")
@@ -40,6 +47,7 @@ def get_top_repositories(args: Dict)->None:
             logger.info("Dumping file {}".format(file_name))
             with open(path_to_dump, "wb") as f:
                 f.write(repo.decoded_content)
+            exit()
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
@@ -56,7 +64,7 @@ def get_inputs()->Dict:
 def main():
     logger.info("Inside Main")
     args = get_inputs()
-    get_top_repositories(args=args)
+    get_matching_code(args=args)
 
 
 if __name__ == '__main__':
